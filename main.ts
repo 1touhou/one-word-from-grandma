@@ -12,12 +12,12 @@
 // Writes exactly one word to /output/entry.txt (or $MAKEFUN_OUTPUT_DIR).
 // Node 22 stdlib only; deterministic; no trailing newline.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const WORD = "contraption";
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+const outDir = (process.env.MAKEFUN_OUTPUT_DIR ?? "").trim() || "/output";
 mkdirSync(outDir, { recursive: true });
 const outPath = join(outDir, "entry.txt");
 
@@ -28,3 +28,8 @@ if (WORD.length < 1 || WORD.length > 30 || WORD.trim().length === 0) {
 }
 
 writeFileSync(outPath, WORD, "utf8");
+
+// Verify the write landed exactly: the file must read back byte-identical.
+if (readFileSync(outPath, "utf8") !== WORD) {
+  throw new Error(`verify failed: ${outPath} does not contain the word`);
+}
